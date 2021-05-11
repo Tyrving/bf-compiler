@@ -1,42 +1,50 @@
 use std::io::stdin;
-use std::env::args;
+
 const TAPE_LEN:usize = 256;
 
-fn print_tape(tape :[u8; TAPE_LEN], pointer :usize) -> [u8; TAPE_LEN] {
-    let mut last_nonzero :usize;
+fn simple_readline() -> String {
+    let mut input = String::new();
+    stdin().read_line(&mut input).expect("Rip");
+    input
+}
 
-    for i in 0..TAPE_LEN-1 {
+fn print_tape(tape :[u8; TAPE_LEN], pointer :usize) {
+    let mut last_nonzero :usize = 0;
+    let max_print :usize;
+
+    for (i, _item) in tape.iter().enumerate(){
         if tape[i] != 0 {
-            last_nonzero = index;
+            last_nonzero = i;
         }
     }
-
-    for byte in tape.iter(){
-        print!("{}|", byte);
+    if pointer>last_nonzero {
+        max_print = pointer+2;
+    } else {
+        max_print = last_nonzero+2;
     }
-
+    for i in 0..max_print+1 {
+        if pointer == i {
+            print!("p=>");
+        }
+        print!("{}|", tape[i]);
+    }
     println!();
-
 }
 
 fn main() {
     println!("Welcome to Mark's BF compiler, written in rust!");
     println!("Input BF program below. I do not support nested loops.");
-
+    let mut max_pointer:usize = 0;
     let mut pointer: usize = 0; //use for tape index
     let mut input_index: usize = 0; //current character to check
     let mut tape: [u8; TAPE_LEN] = [0; TAPE_LEN]; //init tape to 0's
-    let mut input: String = String::new(); //input characters
+    let input: String = String::from(simple_readline()); //input characters
     let mut skip_forward: bool = false; //skip over loop
     let mut skip_back: bool = false;
     let mut return_string: String = String::new(); //add output characters on '.' to this variable
 
-    stdin() //  read line of input characters
-        .read_line(&mut input)
-        .expect("Failed to read line");
 
-
-    while input_index < input.len()-1 {
+    while input_index < input.len() {
 
         //assign current character to variable
         let current_char: char = input.as_bytes()[input_index] as char;
@@ -62,16 +70,19 @@ fn main() {
 
         match current_char {
             '+' => {
-                tape[pointer] += 1;
+                tape[pointer] = tape[pointer].wrapping_add(1);
                 input_index += 1;
             }
             '-' => {
-                tape[pointer] -= 1;
+                tape[pointer] = tape[pointer].wrapping_sub(1);
                 input_index += 1;
             }
             '>' => {
                 pointer += 1;
                 input_index += 1;
+                if pointer > max_pointer {
+                    max_pointer = pointer;
+                }
             }
             '<' => {
                 pointer -= 1;
